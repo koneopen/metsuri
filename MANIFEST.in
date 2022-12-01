@@ -1,0 +1,3 @@
+include src/metsuri/VERSION
+include ChangeLog.md LOG_FETCHING.md
+include tox.ini
