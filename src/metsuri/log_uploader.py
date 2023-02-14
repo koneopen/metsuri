@@ -285,7 +285,12 @@ def parse_log_line(line: Optional[str]) -> Optional[Event]:
         return None
 
     timestamp = m.group("timestamp")
-    dt = datetime.datetime.fromisoformat(timestamp)
+    try:
+        dt = datetime.datetime.fromisoformat(timestamp)
+    except ValueError:
+        logger.warning(f"line \"{line}\" had an invalid timestamp.")
+        return None
+
     if dt.tzinfo is None:
         # Treat as old format localtime log timestamp
         dt = dt.astimezone()

@@ -197,3 +197,21 @@ def test_upload_log_with_invalid_utf8(log_file_name):
         assert len(mock_upload_batch.call_args_list[0][0][3]) == 2
         msg = mock_upload_batch.call_args_list[0][0][3][1].message
         assert "invalid \\xc2" in msg
+
+
+def test_upload_log_with_invalid_timestamp(log_file_name):
+    log_data = b"""\
+    2021-01-24T19:11:17.501126+00:00 rsyslogd: this should be valid
+    22021-01-24T19:13:15.501126+00:00 rsyslogd: [origin software="rsyslogd" swVersion="5.10.1" x-pid="1125" x-info="http://www.rsyslog.com"] start
+    2021-01-24T19:13:17.501126+00:00 rsyslogd: this should be valid again
+    """
+    with open(log_file_name, "wb") as fp:
+        fp.write(log_data)
+
+    with mock.patch('metsuri.log_uploader.get_next_sequence_token'), \
+            mock.patch('metsuri.log_uploader.boto3'), \
+            mock.patch('metsuri.log_uploader.upload_batch') as mock_upload_batch:
+        upload_log(log_file_name, "foo", "bar", min_time_between_requests=0)
+        assert len(mock_upload_batch.call_args_list[0][0][3]) == 2
+        msg = mock_upload_batch.call_args_list[0][0][3][1].message
+        assert "valid again" in msg
